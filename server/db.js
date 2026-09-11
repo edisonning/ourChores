@@ -2,6 +2,7 @@
 // 免掉原生模块编译/prebuild 下载；若未来部署到 Node <22.13 再换回 better-sqlite3
 import { DatabaseSync } from 'node:sqlite'
 import crypto from 'node:crypto'
+import { createAuth } from './auth.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -62,17 +63,8 @@ export const authSecret = (() => {
   return secret
 })()
 
-export const hashPin = (pin) =>
-  crypto.createHash('sha256').update(String(pin) + authSecret).digest('hex')
-
-export const tokenFor = (userId) =>
-  `${userId}.${crypto.createHmac('sha256', authSecret).update(String(userId)).digest('hex')}`
-
-export const userIdFromToken = (token) => {
-  if (typeof token !== 'string') return null
-  const id = token.split('.')[0]
-  return id && tokenFor(id) === token ? Number(id) : null
-}
+export const { hashPin, verifyPin, tokenFor, userIdFromToken,
+  loginBlockedUntil, recordLoginFailure, clearLoginFailures } = createAuth(db, authSecret)
 
 // "今天" = 服务端本地日期（家庭场景 Mac 与手机同时区）
 export const dateKey = (d = new Date()) => {

@@ -38,3 +38,20 @@ ssh -o 'ProxyCommand=nc -b en0 -G 8 %h %p' edison@192.168.2.123
 ```
 
 手机仍需能访问 `192.168.2.123` 所在局域网；更改后需要重新生成预览／真机调试包，已打开的旧包不会自动更新接口地址。未上传审核或正式发布。
+
+## 公网接入准备：Tailscale Funnel（2026-09-11）
+
+已安装官方 stable Tailscale，使用设备名 `tiantian-chores`；未启用子网路由、出口节点或 Tailscale SSH，登录时设置 `--accept-dns=false --accept-routes=false`。账号授权、新 PIN 设置和 Funnel 开通已完成。公网地址为 https://tiantian-chores.taild02971.ts.net/ 。
+
+已部署的登录保护：
+
+- 会话是独立的随机令牌，数据库只存摘要，7 天过期；旧版永久令牌失效，需要重新登录。
+- PIN 使用随机盐的 scrypt 哈希；历史 SHA-256 记录在成功登录时升级，不改变原 PIN。
+- 同账户 15 分钟内 5 次失败、24 小时内 10 次失败后拒绝尝试，返回 429 与 Retry-After。成功登录清除失败记录；计数存在数据库中，重启不清零，也不依赖可伪造的转发 IP 请求头。
+- API 响应禁用缓存，JSON 请求上限 16 KiB。
+- 以 Ubuntu 上 `python3 /home/edison/our-chores/server/set-pin.py` 在交互终端设置两位成员的新 PIN。输入不显示，只保存哈希，并撤销旧会话。
+- 开放前备份位于 Ubuntu `/home/edison/our-chores/backups/pre-public/`；后续回滚只恢复代码，不以备份覆盖新业务数据。
+
+已以 `sudo tailscale funnel --bg http://127.0.0.1:3000` 发布，仅代理甜甜家务服务。公网 HTTPS 证书验证通过，主页 HTTP 200，未登录的 /api/today 返回 401；Edge 浏览器已显示阿波／阿群成员选择。新 PIN 登录后的操作和手机移动网络速度由用户实测，未代填用户的新 PIN。停止公网入口可运行 `sudo tailscale funnel reset`，不会停止局域网后端。
+
+2026-09-11 公网验收：首次启用等待 ACME 证书签发与转发状态生效后访问成功。Tailscale 后台运行，tailscaled 和 our-chores 均已开机自启。保持设备名和 tailnet 名不变以保留网址。用户已自行设置两位成员 PIN（两条均为 scrypt，默认 PIN 数量为 0）。小程序仍使用原局域网 API，本次只开放网页版。

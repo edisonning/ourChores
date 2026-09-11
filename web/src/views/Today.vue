@@ -1,140 +1,136 @@
 <script setup>
-import { memberAvatar } from "../../../shared/member-avatar.mjs";
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Check, X, Clock, Candy, BadgeCheck } from 'lucide-vue-next'
-import { api } from '../api.js'
-import { useSession } from '../stores/session.js'
-import Logo from '../components/Logo.vue'
-
-const s = useSession()
-const data = ref(null)
-const DOW = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-
-async function load() {
-  try {
-    data.value = await api('/today')
-    s.points = Object.fromEntries(data.value.users.map(u => [u.id, u.points]))
-    s.pendingCount = data.value.pending_confirm.length
-  } catch (e) {
-    /* 401 已由 api.js 跳转登录处理 */
-  }
-}
-
-async function complete(t) {
-  try {
-    await api('/completions', { method: 'POST', body: { task_id: t.id } })
-    await load()
-  } catch (e) { alert(e.message) }
-}
-async function confirmIt(c) {
-  await api(`/completions/${c.id}/confirm`, { method: 'POST' })
-  await load()
-}
-async function rejectIt(c) {
-  if (!confirm('确定打回这个任务吗？')) return
-  await api(`/completions/${c.id}/reject`, { method: 'POST' })
-  await load()
-}
-
-const dateLine = computed(() => {
-  if (!data.value) return ''
-  const [y, m, d] = data.value.date.split('-').map(Number)
-  const dow = DOW[(new Date(y, m - 1, d).getDay() + 6) % 7]
-  return `${m}月${d}日 · ${dow}`
-})
-
-function recurLabel(t) {
-  if (!t.recurrence) return '单次'
-  if (t.recurrence === 'daily') return '每天'
-  return t.recurrence.split(':')[1].split(',').map(n => DOW[n - 1]).join('·')
-}
-function assignLabel(t) {
-  if (!t.assignee_id) return '都行'
-  if (t.assignee_id === s.user.id) return '我做'
-  return (s.partner?.name || 'TA') + '做'
-}
-function assignClass(t) {
-  if (!t.assignee_id) return ''
-  return t.assignee_id === s.user.id ? 'mine' : 'theirs'
-}
+import { ref, computed } from "vue";
+import { api } from "../api.js";
+import { useSession } from "../stores/session.js";
+import { useTaskPage } from "../useTaskPage.js";
+import { ownerGroups } from "../../../shared/task-presentation.mjs";
+import TaskInfo from "../components/TaskInfo.vue";
+const s = useSession(),
+  expanded = ref(false);
+const { data, error, loading, busy, refresh, act } = useTaskPage("/today");
+const groups = computed(() =>
+  ownerGroups(
+    (data.value?.tasks || []).filter((t) => t.status !== "confirmed"),
+    data.value?.users || [],
+    s.user?.id,
+  ),
+);
+const earlierMine = computed(() =>
+  (data.value?.pending_mine || []).filter(
+    (c) => c.date_key !== data.value?.date,
+  ),
+);
 const canDo = (t) =>
-  (!t.completion || t.completion.status === 'rejected') &&
-  (!t.assignee_id || t.assignee_id === s.user.id)
-
-function onVisible() { if (!document.hidden) load() }
-let timer
-onMounted(() => {
-  load()
-  timer = setInterval(load, 30000)
-  document.addEventListener('visibilitychange', onVisible)
-})
-onUnmounted(() => {
-  clearInterval(timer)
-  document.removeEventListener('visibilitychange', onVisible)
-})
+  ["todo", "rejected"].includes(t.status) &&
+  (!t.assignee_id || t.assignee_id === s.user?.id);
+const complete = (t) =>
+  act(() => api("/completions", { method: "POST", body: { task_id: t.id } }));
+function verdict(c, kind) {
+  act(async () => {
+    if (kind === "reject" && !confirm("确定打回这个任务吗？")) return;
+    await api(`/completions/${c.id}/${kind}`, { method: "POST" });
+  });
+}
 </script>
-
 <template>
-  <div v-if="data">
-    <h2 class="date-line">{{ dateLine }}</h2>
+  <div>
+    <h2 class="date-line">今天也一起加油</h2>
     <p class="date-sub">
-      今天 {{ data.tasks.length }} 项任务<template v-if="s.pendingCount"> · 有 {{ s.pendingCount }} 件等你确认</template>
+      {{ data?.date }} · 今日安排 {{ data?.tasks.length || 0 }} 项
     </p>
-
-    <!-- 待我确认 -->
-    <section v-if="data.pending_confirm.length">
-      <h2 class="sec-title"><BadgeCheck :size="17" /> 待我确认 <em>{{ data.pending_confirm.length }}</em></h2>
-      <article v-for="c in data.pending_confirm" :key="c.id" class="card confirm-card fade-up">
-        <span class="avatar" :class="'u' + c.user_id">{{ memberAvatar(c.user_id, c.user_name) }}</span>
-        <div class="confirm-info">
-          <b>{{ c.user_name }}</b> 完成了「{{ c.title }}」
-          <span class="pts-badge"><Candy :size="13" /> +{{ c.points }}</span>
-        </div>
-        <div class="confirm-actions">
-          <button class="btn btn-primary sm" @click="confirmIt(c)"><Check :size="15" /> 确认</button>
-          <button class="btn btn-line sm" @click="rejectIt(c)"><X :size="15" /></button>
-        </div>
-      </article>
-    </section>
-
-    <!-- 今日任务 -->
-    <h2 class="sec-title">今日任务</h2>
-    <article
-      v-for="(t, i) in data.tasks" :key="t.id"
-      class="card task fade-up" :style="{ animationDelay: i * 50 + 'ms' }"
-    >
-      <div v-if="t.completion?.status === 'confirmed'" class="stamp">已完成</div>
-      <div class="task-main">
-        <div class="task-title-row">
-          <h3>{{ t.title }}</h3>
-          <span class="pts-badge"><Candy :size="14" /> +{{ t.points }}</span>
-        </div>
-        <div class="task-meta">
-          <span class="tag" :class="assignClass(t)">{{ assignLabel(t) }}</span>
-          <span class="tag">{{ recurLabel(t) }}</span>
-          <span v-if="t.overdue" class="tag warn">已逾期</span>
-          <span v-if="t.completion?.status === 'rejected'" class="tag warn">被打回了，再试一次</span>
-        </div>
-      </div>
-      <div class="task-side">
-        <template v-if="t.completion?.status === 'pending'">
-          <span class="waiting"><Clock :size="14" /> 等确认</span>
-        </template>
-        <template v-else-if="t.completion?.status === 'confirmed'">
-          <span class="pts-chip"><Candy :size="12" /> +{{ t.completion.points }}</span>
-        </template>
-        <template v-else-if="canDo(t)">
-          <button class="btn btn-primary sm" @click="complete(t)">完成</button>
-        </template>
-        <template v-else>
-          <span class="waiting" style="color: var(--ink-dim)">等{{ s.partner?.name || 'TA' }}</span>
-        </template>
-      </div>
-    </article>
-
-    <div v-if="!data.tasks.length" class="empty">
-      <Logo :size="72" />
-      <p>今天没有任务，好好休息</p>
+    <div v-if="error" class="notice">
+      {{ error }}
+      <button class="btn btn-line sm" :disabled="loading" @click="refresh">
+        刷新重试
+      </button>
     </div>
+    <p v-else-if="loading" class="execution-note">正在刷新…</p>
+    <template v-if="data">
+      <section v-if="data.pending_confirm.length">
+        <h2 class="sec-title">待我确认 · {{ data.pending_confirm.length }}</h2>
+        <article
+          v-for="record in data.pending_confirm"
+          :key="record.id"
+          class="card execution-card"
+        >
+          <h3>{{ record.user_name }}完成了「{{ record.title }}」</h3>
+          <p class="execution-note">
+            {{ record.date_key }} · +{{ record.points }} 颗糖果
+          </p>
+          <div class="task-buttons">
+            <button
+              class="btn btn-primary sm"
+              :disabled="busy"
+              @click="verdict(record, 'confirm')"
+            >
+              确认</button
+            ><button
+              class="btn btn-line sm"
+              :disabled="busy"
+              @click="verdict(record, 'reject')"
+            >
+              打回
+            </button>
+          </div>
+        </article>
+      </section>
+      <section v-if="earlierMine.length">
+        <h2 class="sec-title">之前的打卡 · 等对方确认</h2>
+        <article
+          v-for="record in earlierMine"
+          :key="record.id"
+          class="card execution-card"
+        >
+          <h3>{{ record.title }}</h3>
+          <p class="execution-note">
+            {{ record.user_name }} · {{ record.date_key }} · 待确认
+          </p>
+        </article>
+      </section>
+      <section v-for="group in groups" :key="group.id">
+        <h2 class="sec-title" :class="'owner-text-' + group.id">
+          {{ group.name }} · {{ group.tasks.length }}
+        </h2>
+        <article
+          v-for="task in group.tasks"
+          :key="task.id"
+          class="card execution-card"
+        >
+          <TaskInfo :task="task" :user-id="s.user?.id" />
+          <div v-if="canDo(task)" class="task-buttons">
+            <button
+              class="btn btn-primary sm"
+              :disabled="busy"
+              @click="complete(task)"
+            >
+              {{ task.status === "rejected" ? "重新打卡" : "完成打卡" }}
+            </button>
+          </div>
+        </article>
+        <p v-if="!group.tasks.length" class="group-empty">
+          这一组没有待处理任务
+        </p>
+      </section>
+      <button
+        class="archive-toggle"
+        :aria-expanded="expanded"
+        @click="expanded = !expanded"
+      >
+        已完成 · {{ data.completed?.length || 0 }}
+        <span>{{ expanded ? "收起" : "展开" }}</span>
+      </button>
+      <div v-if="expanded">
+        <article
+          v-for="task in data.completed"
+          :key="task.completion.id"
+          class="card execution-card"
+        >
+          <TaskInfo :task="task" :user-id="s.user?.id" />
+        </article>
+        <p v-if="!data.completed?.length" class="group-empty">
+          今天还没有确认完成的任务
+        </p>
+      </div>
+    </template>
   </div>
 </template>

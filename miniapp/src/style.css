@@ -291,3 +291,16 @@ button:after {
   height: 22px;
   flex-shrink: 0;
 }
+
+.execution-note { margin-top:8px; font-size:12px; color:#80695e; line-height:1.6; }
+.tag.owner-1 { background:#ffeae3; color:#bb392a; }
+.tag.owner-2 { background:#dfefe9; color:#087963; }
+.owner-text-1 { color:#bb392a; }
+.owner-text-2 { color:#087963; }
+.tag.state-confirmed { color:#087963; background:#dfefe9; }
+.tag.state-pending,.tag.state-rejected { color:#a34b09; background:#fff1de; }
+.group-empty { padding:12px 2px; font-size:13px; color:#80695e; }
+.archive-toggle { display:flex; justify-content:space-between; align-items:center; width:100%; border-radius:0; border-top:1px solid #f3e3d6; background:transparent; min-height:52px; margin-top:24px; padding:12px 2px; font-weight:700; font-size:16px; }
+.archive-toggle text { font-size:13px; color:#80695e; }
+.history-list { margin-top:14px; border-top:1px solid #f3e3d6; font-size:13px; }
+.history-row { padding:10px 0; border-bottom:1px solid #f3e3d6; line-height:1.7; }

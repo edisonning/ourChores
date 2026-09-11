@@ -3,6 +3,11 @@ import { ref, reactive } from "vue";
 import { usePage } from "../../usePage.js";
 import { api, confirmAction } from "../../api.js";
 import { DOW, recurrence, assignee } from "../../labels.js";
+import {
+  statusLabels,
+  ownerLabel,
+} from "../../../../shared/task-presentation.mjs";
+import TaskInfo from "../../components/TaskInfo.vue";
 import Identity from "../../components/Identity.vue";
 import PageStatus from "../../components/PageStatus.vue";
 const defaults = () => ({
@@ -13,6 +18,11 @@ const defaults = () => ({
   dows: [],
   due_date: "",
 });
+const archiveOpen = ref(false),
+  historyId = ref(null),
+  historyRows = ref([]),
+  historyLoading = ref(false),
+  historyError = ref("");
 const editing = ref(false),
   editingId = ref(null),
   form = reactive(defaults());
@@ -20,6 +30,9 @@ const { s, loading, busy, error, load, act } = usePage(
   "tasks",
   undefined,
   () => {
+    archiveOpen.value = false;
+    historyId.value = null;
+    historyRows.value = [];
     editing.value = false;
     editingId.value = null;
     Object.assign(form, defaults());
@@ -46,7 +59,7 @@ function edit(t) {
             : [],
           due_date: t.due_date || "",
         }
-      : defaults(),
+      : { ...defaults(), assignee_id: s.user?.id || null },
   );
   editing.value = true;
 }
@@ -96,6 +109,24 @@ function remove() {
     editing.value = false;
   });
 }
+async function history(task) {
+  if (historyId.value === task.id) {
+    historyId.value = null;
+    return;
+  }
+  historyId.value = task.id;
+  historyRows.value = [];
+  historyLoading.value = true;
+  historyError.value = "";
+  try {
+    const result = await api(`/tasks/${task.id}/history`);
+    if (historyId.value === task.id) historyRows.value = result.records;
+  } catch (e) {
+    if (!e.stale && historyId.value === task.id) historyError.value = e.message;
+  } finally {
+    if (historyId.value === task.id) historyLoading.value = false;
+  }
+}
 </script>
 <template>
   <view class="page"
@@ -133,7 +164,7 @@ function remove() {
             :disabled="busy"
             @click="form.assignee_id = null"
           >
-            都行</button
+            谁都可以做</button
           ><button
             v-for="memberItem in s.users"
             :key="memberItem.id"
@@ -204,41 +235,95 @@ function remove() {
           删除
         </button></view
       ></view
-    ><template v-if="!editing && s.tasks"
-      ><template
+    >
+    <template v-if="!editing && s.tasks">
+      <view
         v-for="group in [
           { name: '周期任务', repeat: true },
           { name: '一次性任务', repeat: false },
         ]"
         :key="group.name"
-        ><view class="section">{{ group.name }}</view
-        ><view
+      >
+        <view class="section">{{ group.name }}</view>
+        <view
           v-for="taskItem in s.tasks.tasks.filter(
-            (taskItem) => !!taskItem.recurrence === group.repeat,
+            (taskItem) =>
+              !!taskItem.recurrence === group.repeat && !taskItem.done,
           )"
           :key="taskItem.id"
           class="card"
-          ><view class="row"
-            ><view class="title grow">{{ taskItem.title }}</view
-            ><text class="points">{{ taskItem.points }} 颗</text></view
-          ><text class="tag">{{ assignee(taskItem, s) }}</text
-          ><text class="tag">{{ recurrence(taskItem) }}</text
-          ><text v-if="taskItem.done" class="tag good">已打卡</text
-          ><view class="actions"
-            ><button class="btn line" @click="edit(taskItem)">
-              编辑
+        >
+          <TaskInfo :task="taskItem" :user-id="s.user?.id" /><view
+            class="execution-note"
+            >{{ recurrence(taskItem) }}</view
+          >
+          <view class="actions"
+            ><button class="btn line" @click="edit(taskItem)">编辑</button
+            ><button class="btn line" @click="history(taskItem)">
+              {{ historyId === taskItem.id ? "收起记录" : "执行记录" }}
             </button></view
-          ></view
-        ><view
+          >
+          <view v-if="historyId === taskItem.id" class="history-list"
+            ><view v-if="historyLoading">正在加载…</view
+            ><view v-else-if="historyError"
+              >{{ historyError
+              }}<button
+                class="btn line"
+                @click="
+                  historyId = null;
+                  history(taskItem);
+                "
+              >
+                重试
+              </button></view
+            ><template v-else
+              ><view
+                v-for="record in historyRows"
+                :key="record.date_key"
+                class="history-row"
+                ><view
+                  >{{ record.date_key }} ·
+                  {{ statusLabels[record.status] }}</view
+                ><view
+                  >负责人：{{ ownerLabel(record)
+                  }}<text v-if="record.user_name">
+                    · 打卡人：{{ record.user_name }}</text
+                  ></view
+                ></view
+              ><view v-if="!historyRows.length">还没有执行记录</view
+              ><view class="execution-note"
+                >最近 30 次执行；历史归属按执行时保留</view
+              ></template
+            ></view
+          >
+        </view>
+        <view
           v-if="
             !s.tasks.tasks.some(
-              (taskItem) => !!taskItem.recurrence === group.repeat,
+              (taskItem) =>
+                !!taskItem.recurrence === group.repeat && !taskItem.done,
             )
           "
-          class="empty"
+          class="group-empty"
           >还没有{{ group.name }}</view
-        ></template
-      ></template
-    ></view
-  >
+        >
+      </view>
+      <button class="archive-toggle" @click="archiveOpen = !archiveOpen">
+        已完成 · {{ s.tasks.tasks.filter((taskItem) => taskItem.done).length }}
+        <text>{{ archiveOpen ? "收起" : "展开" }}</text>
+      </button>
+      <view v-if="archiveOpen"
+        ><view
+          v-for="taskItem in s.tasks.tasks.filter((taskItem) => taskItem.done)"
+          :key="taskItem.id"
+          class="card"
+          ><TaskInfo :task="taskItem" :user-id="s.user?.id" /><view class="actions"><button class="btn line" @click="edit(taskItem)">编辑</button></view></view
+        ><view
+          v-if="!s.tasks.tasks.some((taskItem) => taskItem.done)"
+          class="group-empty"
+          >还没有已完成的单次任务</view
+        ></view
+      >
+    </template>
+  </view>
 </template>

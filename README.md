@@ -63,3 +63,9 @@ corepack pnpm test
 ```
 
 导入目录、AppID／局域网 API 配置和手机调试步骤见 [小程序启动说明](miniapp/README.md)。
+
+## 公网访问
+
+网页版：https://tiantian-chores.taild02971.ts.net/
+
+通过 Ubuntu 上的 Tailscale Funnel 提供 HTTPS，使用个人免费方案。新 PIN 由成员自行设置，登录会话有效期 7 天。维护与停用方法见 [部署说明](deploy/README.md)。

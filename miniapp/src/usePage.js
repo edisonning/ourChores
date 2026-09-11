@@ -59,7 +59,7 @@ export function usePage(page, period = ref("week"), resetForm = () => {}) {
     s.user = readSession().user;
     load();
     clearInterval(timer);
-    if (page === "today")
+    if (page === "today" || page === "tasks")
       timer = setInterval(() => {
         if (visible && !loading.value && !busy.value) load();
       }, 30000);

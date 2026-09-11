@@ -72,6 +72,6 @@ function back() {
       </div>
     </div>
 
-    <p class="login-hint">初始 PIN 均为 1234</p>
+    <p class="login-hint">请使用你设置的四位 PIN 登录</p>
   </div>
 </template>

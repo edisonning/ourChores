@@ -8,6 +8,13 @@ coverage/
 .vite/
 .cache/
 *.tsbuildinfo
+*.timestamp-*.mjs
+*.timestamp-*.js
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+*.pyo
 
 # Local environment (keep the shared example)
 .env
@@ -19,6 +26,7 @@ coverage/
 /server/data.db-wal
 /server/data.db-shm
 /server/data.db-journal
+/backups/
 
 # Generated miniapp configuration and developer settings
 /miniapp/src/manifest.json

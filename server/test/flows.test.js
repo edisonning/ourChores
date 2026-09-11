@@ -110,6 +110,15 @@ test("隔离数据库：任务兼容接口与双人家务、心愿闭环", async
       (await request("/rewards", "GET", null, a)).redemptions[0].title,
       "测试心愿",
     );
+    for (let i = 0; i < 5; i++) await request('/login', 'POST', {id:1,pin:'0000'}, null, 401);
+    const limited = await fetch('http://127.0.0.1:31987/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json', 'X-Forwarded-For':'203.0.113.7'},
+      body:JSON.stringify({id:1,pin:'1234'})
+    });
+    assert.equal(limited.status,429);
+    assert.ok(Number(limited.headers.get('Retry-After')) > 0);
+    assert.equal(limited.headers.get('Cache-Control'),'no-store');
+    await request('/login', 'POST', {id:2,pin:'1234'});
   } finally {
     child.kill();
     await once(child, "exit");
