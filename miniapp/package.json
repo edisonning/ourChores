@@ -1,0 +1,22 @@
+{
+  "name": "miniapp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:mp-weixin": "node scripts/configure.mjs && uni -p mp-weixin",
+    "build:mp-weixin": "node scripts/configure.mjs && uni build -p mp-weixin"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-alpha-5020520260829001",
+    "@dcloudio/uni-components": "3.0.0-alpha-5020520260829001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-alpha-5020520260829001",
+    "vue": "3.4.21",
+    "pinia": "2.1.7"
+  },
+  "devDependencies": {
+    "@dcloudio/types": "3.4.31",
+    "@dcloudio/vite-plugin-uni": "3.0.0-alpha-5020520260829001",
+    "vite": "5.2.8",
+    "@resvg/resvg-js": "2.6.2"
+  }
+}

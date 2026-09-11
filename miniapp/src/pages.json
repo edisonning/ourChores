@@ -1,0 +1,75 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/today/index",
+      "style": {
+        "navigationBarTitleText": "今日",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/tasks/index",
+      "style": {
+        "navigationBarTitleText": "任务",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/rewards/index",
+      "style": {
+        "navigationBarTitleText": "心愿",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/stats/index",
+      "style": {
+        "navigationBarTitleText": "统计",
+        "enablePullDownRefresh": true
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#FFF8F0",
+    "backgroundColor": "#FFF8F0"
+  },
+  "tabBar": {
+    "color": "#80695E",
+    "selectedColor": "#E6462F",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/today/index",
+        "text": "今日",
+        "iconPath": "static/today.png",
+        "selectedIconPath": "static/today-active.png"
+      },
+      {
+        "pagePath": "pages/tasks/index",
+        "text": "任务",
+        "iconPath": "static/tasks.png",
+        "selectedIconPath": "static/tasks-active.png"
+      },
+      {
+        "pagePath": "pages/rewards/index",
+        "text": "心愿",
+        "iconPath": "static/rewards.png",
+        "selectedIconPath": "static/rewards-active.png"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "统计",
+        "iconPath": "static/stats.png",
+        "selectedIconPath": "static/stats-active.png"
+      }
+    ]
+  }
+}

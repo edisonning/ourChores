@@ -1,0 +1,12 @@
+{
+  "name": "our-chores",
+  "private": true,
+  "scripts": {
+    "dev": "corepack pnpm --filter server --filter web --parallel dev",
+    "build": "corepack pnpm --filter web build",
+    "start": "corepack pnpm --filter server start",
+    "dev:mp-weixin": "corepack pnpm --filter miniapp dev:mp-weixin",
+    "build:mp-weixin": "corepack pnpm --filter miniapp build:mp-weixin",
+    "test": "node --test server/test/*.test.js miniapp/test/*.test.js"
+  }
+}

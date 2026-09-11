@@ -1,0 +1,40 @@
+# Dependencies and package manager cache
+node_modules/
+.pnpm-store/
+
+# Build output and caches
+dist/
+coverage/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Local environment (keep the shared example)
+.env
+.env.*
+!.env.example
+
+# Local SQLite data
+/server/data.db
+/server/data.db-wal
+/server/data.db-shm
+/server/data.db-journal
+
+# Generated miniapp configuration and developer settings
+/miniapp/src/manifest.json
+project.private.config.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# macOS metadata
+.DS_Store
+
+# Local documentation
+/docs/
+
+# Local output
+/output/

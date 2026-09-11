@@ -1,0 +1,21 @@
+[Unit]
+Description=Our Chores household API and web
+After=network.target
+
+[Service]
+Type=simple
+User=edison
+Group=edison
+WorkingDirectory=/home/edison/our-chores/server
+ExecStart=/home/edison/.local/share/pi-node/node-v22.22.3-linux-x64/bin/node --no-warnings /home/edison/our-chores/server/index.js
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=TZ=Asia/Shanghai
+Environment=DB_PATH=/home/edison/our-chores/server/data.db
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
