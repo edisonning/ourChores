@@ -1,7 +1,7 @@
 <script setup>
 import { memberAvatar } from "../../shared/member-avatar.mjs";
 import { onMounted } from 'vue'
-import { Sun, Sparkles, Gift, ChartBar, LogOut, Candy } from 'lucide-vue-next'
+import { Sun, Sparkles, Gift, Scale, LogOut, Candy } from 'lucide-vue-next'
 import { useSession } from './stores/session.js'
 
 const s = useSession()
@@ -44,7 +44,7 @@ function switchUser() {
       </RouterLink>
       <RouterLink to="/tasks" class="tab"><Sparkles :size="21" /><span>任务</span></RouterLink>
       <RouterLink to="/rewards" class="tab"><Gift :size="21" /><span>心愿</span></RouterLink>
-      <RouterLink to="/stats" class="tab"><ChartBar :size="21" /><span>统计</span></RouterLink>
+      <RouterLink to="/stats" class="tab"><Scale :size="21" /><span>天平</span></RouterLink>
     </nav>
   </div>
 </template>

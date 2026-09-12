@@ -45,6 +45,9 @@ test("隔离数据库：任务兼容接口与双人家务、心愿闭环", async
     const a = (await request("/login", "POST", { id: 1, pin: "1234" })).token,
       b = (await request("/login", "POST", { id: 2, pin: "1234" })).token;
     await request("/today", "GET", null, null, 401);
+    const presetRewards = (await request('/rewards', 'GET', null, a)).rewards;
+    assert.equal(presetRewards.length, 16);
+    assert.ok(presetRewards.some(r => r.title === '咖啡一杯' && r.cost === 15));
     const task = (
       await request(
         "/tasks",

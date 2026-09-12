@@ -1,0 +1,74 @@
+{
+  "canvas": [
+    1536,
+    1024
+  ],
+  "pivot": [
+    768,
+    233
+  ],
+  "attachments": {
+    "left": [
+      308,
+      233
+    ],
+    "right": [
+      1227,
+      233
+    ]
+  },
+  "layers": {
+    "stand": {
+      "file": "stand.png",
+      "bounds": [
+        543,
+        215,
+        993,
+        853
+      ],
+      "size": [
+        450,
+        638
+      ]
+    },
+    "beam": {
+      "file": "beam.png",
+      "bounds": [
+        278,
+        167,
+        1257,
+        289
+      ],
+      "size": [
+        979,
+        122
+      ]
+    },
+    "left-pan": {
+      "file": "left-pan.png",
+      "bounds": [
+        83,
+        258,
+        532,
+        703
+      ],
+      "size": [
+        449,
+        445
+      ]
+    },
+    "right-pan": {
+      "file": "right-pan.png",
+      "bounds": [
+        1005,
+        259,
+        1452,
+        704
+      ],
+      "size": [
+        447,
+        445
+      ]
+    }
+  }
+}

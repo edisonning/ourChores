@@ -3,6 +3,8 @@
 import { DatabaseSync } from 'node:sqlite'
 import crypto from 'node:crypto'
 import { createAuth } from './auth.js'
+import { addRewardPresets } from './reward-presets.js'
+import { addTaskPresets } from './task-presets.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -96,3 +98,7 @@ if (db.prepare('SELECT COUNT(*) AS n FROM users').get().n === 0) {
   insReward.run('周末睡懒觉(对方做早饭)', 50)
   console.log('首次启动：已创建默认用户(老公/老婆, PIN 1234)与示例任务、心愿')
 }
+
+// 新老数据库均补充预设，整批只执行一次。
+addRewardPresets(db)
+addTaskPresets(db)

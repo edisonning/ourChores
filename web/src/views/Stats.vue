@@ -1,77 +1,51 @@
 <script setup>
-import { memberAvatar } from "../../../shared/member-avatar.mjs";
 import { ref, computed, onMounted } from 'vue'
-import { Trophy, Candy } from 'lucide-vue-next'
 import { api } from '../api.js'
+import BalanceScale from '../components/BalanceScale.vue'
 
 const period = ref('week')
 const data = ref(null)
-
+const loading = ref(false)
+const error = ref('')
 async function load() {
-  data.value = await api(`/stats?period=${period.value}`)
+  if (loading.value) return
+  loading.value = true
+  error.value = ''
+  try { data.value = await api(`/stats?period=${period.value}`) }
+  catch (e) { error.value = e.message || '暂时无法读取家务记录' }
+  finally { loading.value = false }
 }
-
-const rangeLine = computed(() => {
-  if (!data.value) return ''
-  const [, fm, fd] = data.value.from.split('-').map(Number)
-  const [, tm, td] = data.value.to.split('-').map(Number)
-  return `${fm}月${fd}日 — ${fm === tm ? '' : tm + '月'}${td}日`
-})
-
-const leader = computed(() => {
-  if (!data.value || data.value.users.length < 2) return null
-  const [a, b] = data.value.users
-  if (a.points === b.points) return null
-  return a.points > b.points ? a : b
-})
-
+const rangeLine = computed(() => data.value ? `${data.value.from} — ${data.value.to}` : '')
 function setPeriod(p) {
+  if (loading.value || period.value === p) return
   period.value = p
   load()
 }
-
 onMounted(load)
 </script>
-
 <template>
-  <div v-if="data">
-    <h2 class="date-line">家务统计</h2>
-
-    <div class="chips" style="margin: 12px 2px 4px">
-      <button :class="{ on: period === 'week' }" @click="setPeriod('week')">本周</button>
-      <button :class="{ on: period === 'month' }" @click="setPeriod('month')">本月</button>
+  <section class="balance-page" :aria-busy="loading">
+    <h2 class="date-line">家务天平</h2>
+    <p class="balance-intro">一起分担，让每一份付出被看见</p>
+    <div class="chips balance-periods" role="group" aria-label="查看周期">
+      <button :class="{ on: period === 'week' }" :aria-pressed="period === 'week'" :disabled="loading" @click="setPeriod('week')">本周</button>
+      <button :class="{ on: period === 'month' }" :aria-pressed="period === 'month'" :disabled="loading" @click="setPeriod('month')">本月</button>
     </div>
-    <p class="range-line">{{ rangeLine }}</p>
-
-    <div v-if="leader" class="card fade-up" style="display: flex; align-items: center; gap: 10px; margin-bottom: 13px; background: linear-gradient(135deg, #FFF3E2, #FFE9D6)">
-      <Trophy :size="20" style="color: var(--gold); flex: none" />
-      <span style="font-size: 14px"><b>{{ leader.name }}</b> 本{{ period === 'week' ? '周' : '月' }}攒了最多糖果，夸夸 TA</span>
-    </div>
-
-    <article v-for="u in data.users" :key="u.id" class="card stat-card fade-up">
-      <div class="stat-head">
-        <span class="avatar" :class="'u' + u.id">{{ memberAvatar(u.id, u.name) }}</span>
-        <b>{{ u.name }}</b>
-        <span class="pts-chip"><Candy :size="13" /> {{ u.points }}</span>
-      </div>
-      <div class="stat-nums">
-        <div>
-          <p class="n">{{ u.completed }}</p>
-          <p class="l">完成件数</p>
-        </div>
-        <div>
-          <p class="n">{{ u.points }}</p>
-          <p class="l">获得糖果</p>
-        </div>
-        <div>
-          <p class="n">{{ u.rate === null ? '—' : Math.round(u.rate * 100) + '%' }}</p>
-          <p class="l">任务完成率</p>
-        </div>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" :class="'t' + u.id" :style="{ width: (u.rate ?? 0) * 100 + '%' }" />
-      </div>
-      <p class="rate-line"><span>应做 {{ u.due }} 件</span><span>完成了 {{ u.completed }} 件</span></p>
-    </article>
-  </div>
+    <p v-if="loading" class="balance-status" role="status">正在读取家务记录…</p>
+    <div v-if="error" class="balance-error" role="alert">{{ error }} <button class="btn" @click="load">重试</button></div>
+    <template v-if="data">
+      <p class="balance-range">{{ rangeLine }} · {{ data.period === 'month' ? '本月' : '本周' }}</p>
+      <BalanceScale :users="data.users" :period="data.period" />
+    </template>
+  </section>
 </template>
+<style scoped>
+.balance-intro, .balance-range, .balance-status { color: #80695E; font-size: 13px; line-height: 1.7; }
+.balance-intro { margin-top: 4px; }
+.balance-periods { margin: 20px 0 8px; }
+.balance-periods button { min-height: 44px; }
+.balance-periods button:focus-visible, .balance-error button:focus-visible { outline: 2px solid #B94635; outline-offset: 3px; }
+.balance-periods button:disabled { opacity: .6; cursor: wait; }
+.balance-error { color: #B94635; font-size: 14px; padding: 12px 0; }
+.balance-error button { margin-left: 10px; }
+</style>

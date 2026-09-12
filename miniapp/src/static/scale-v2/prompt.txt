@@ -1,0 +1,14 @@
+Use case: stylized-concept. Create ONE final production-quality transparent PNG illustration asset of a household balance scale for a couples' chores app. Reference image 1 is ONLY a palette and UI mood reference; do NOT reproduce the page or its existing thin mechanical scale.
+
+Art direction: refined warm stationery / lifestyle editorial illustration for adults, rounded softly substantial shapes, very restrained matte paper-cut layering and subtle paper surface within the object only. Elegant and affectionate, not childish. Clean readable silhouette at 300 pixels wide. Two-dimensional front elevation, no perspective, no 3D clay or toy rendering. A charming small domestic object with broad shallow dishes and a compact softly rounded pedestal.
+
+Geometry: a single complete symmetrical two-pan balance scale, horizontal beam and both pans level. Beam ends gently rounded, a small circular central pivot, moderately short substantial upright and a flattened rounded base. Two simple suspension cords for each shallow candy-dish pan, physically connected and identical lengths. Broad balanced silhouette. Leave both dishes empty for later avatar overlays; no text or avatar tokens. Make each structural part visually distinguishable for later animation asset separation.
+
+Palette: warm milk-tea brown #B6947A frame, restrained warm brown #80695E fine detail. Left pan pastel coral #FFEAE3 with coral #FF6B5E lip accents; right pan pale mint #DFEFE9 with teal #0E9F86 accents. Balance the visual weight of both colors. Harmonize with a cream #FFF8F0 webpage but DO NOT paint that background. Soft internal tonal variation only, no heavy shadows.
+
+Composition/output: centered isolated full object, landscape 3:2 image, 12% transparent padding all around, genuine alpha transparency, crisp antialiased edges, PNG. No ground shadow, floor, colored backdrop, checkerboard, white sticker outline, card or border. No text, letters, numbers, logos, watermarks, people, hands, faces, hearts, flowers, stars, candy pieces or decorative extras. No justice/court scales, laboratory metal apparatus, sharp black outlines, realistic woodgrain, metallic reflections, heavy gradients or plastic. Deliver only the single complete level scale asset.
+
+Background extraction prompt:
+Remove the ENTIRE gray checkerboard and wrinkled paper background, including inside both triangular hanging cords and between every part. Preserve the scale's existing shape, proportions, colors, material, level horizontal beam, empty coral left pan and mint right pan. Output genuine alpha transparency.
+
+Provenance: Built-in imagegen returned RGB images with a painted checkerboard. With explicit user authorization, build_assets.py uses Pillow to remove the neutral gray background and split four RGBA layers; no external API was used for postprocessing.
